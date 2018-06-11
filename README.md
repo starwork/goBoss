@@ -3,6 +3,8 @@
   这是基于go语言编写的一款boss直聘机器人软件(牛人版)。附上[Python版本](https://github.com/wuranxu/Boss),
   无需配置Go环境, 我会提供windows和macos的可执行程序。
   
+  切记: 本软件仅限于个人使用, 如有任何商业用途, 记得分我一杯羹。
+  
 # 闪光点
 
   - 自动回复boss消息

@@ -45,7 +45,7 @@ func (m *Message) Receive() {
 				} else {
 					if star == "star" {
 						// 回复包含简历且未发送过简历
-						if strings.Contains(latest, "简历") && !status {
+						if strings.Contains(latest, cf.Config.ResumeKeyword) && !status {
 							// 发送简历
 							m.SendInfo(bossName, company)
 							m.ReplyList[bossName] = true
@@ -178,7 +178,11 @@ func (m *Message) getInfo() map[string]string {
 	if len(bossEle) > 0 {
 		info["bossName"], _ = bossEle[0].Text()
 		info["company"], _ = bossEle[1].Text()
-		info["bossTitle"], _ = bossEle[2].Text()
+		if len(bossEle) < 3 {
+			info["bossTitle"] = "未获取到boss职位, 可能是猎头"
+		} else {
+			info["bossTitle"], _ = bossEle[2].Text()
+		}
 	}
 	jobEle, err := GetElement("消息页面", "职位信息").GetElements(m.Session)
 	Assert(err)

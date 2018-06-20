@@ -32,6 +32,7 @@ type UserConfig struct {
 	APIKey        string   `json:"api_key"`
 	SecretKey     string   `json:"secret_key"`
 	BlackList     []string `json:"black_list"`
+	ResumeKeyword string   `json:"resume_keyword"`
 	Retry         int      `json:"retry"`
 	Delay         int      `json:"delay"`
 	AutoResume    bool     `json:"auto_resume"`

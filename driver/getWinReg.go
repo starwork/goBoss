@@ -1,5 +1,13 @@
-// 下面是编译的源代码, 因为mac下无法编译通过registry库
-package driver  // 去掉这行
+// 感谢Wusuluren的帮助, 使用windows命令行直接操作注册表
+
+
+package driver
+import (
+	"log"
+	"strings"
+	"os/exec"
+	"bytes"
+)
 
 //package main
 //
@@ -25,3 +33,21 @@ package driver  // 去掉这行
 //	ver := verList[0]
 //	fmt.Println(ver)
 //}
+
+func getWinChromeVersion() string {
+	cmd := exec.Command("reg", "query", `HKEY_CURRENT_USER\Software\Google\Chrome\BLBeacon`, "/v", "version")
+	cmdOutput := &bytes.Buffer{}
+	cmd.Stdout = cmdOutput
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal("获取Windows Chrome版本失败!请检查Chrome是否安装 Error: ", err)
+	}
+	ver := string(cmdOutput.Bytes())
+	verList := strings.Split(ver, " ")
+	ver = verList[len(verList)-1]
+	//fmt.Println(ver)
+	verList = strings.Split(ver, ".")
+	ver = verList[0]
+	//fmt.Println(verList[0])
+	return ver
+}

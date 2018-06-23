@@ -164,7 +164,7 @@ func getChromeVer() string {
 	var ver string
 	switch config.Environ.Sys {
 	case "windows":
-		ver = getWinChromeVer()
+		ver = getWinChromeVersion()
 	default:
 		ver = getUnixChromeVer()
 	}

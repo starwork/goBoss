@@ -5,5 +5,5 @@ import (
 )
 
 func Test_DownloadDriver(t *testing.T) {
-	SetDriver()
+	getWinChromeVersion()
 }

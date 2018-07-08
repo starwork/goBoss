@@ -53,6 +53,7 @@ type UserConfig struct {
 	StarReply     string   `json:"star_reply"`
 	BlackReply    string   `json:"black_reply"`
 	CommonReply   string   `json:"common_reply"`
+	ExpectSalary  int64    `json:"expect_salary"`
 }
 
 type Env struct {
@@ -62,6 +63,7 @@ type Env struct {
 	DriverZip     string
 	BaiduTokenUrl string
 	BaiduCode     string
+	QrcodeFile    string
 }
 
 func GetCurrentDirectory() string {
@@ -78,6 +80,7 @@ func init() {
 	// Environ.Root, _ = filepath.Abs(filepath.Dir(os.Args[0]))
 	//Environ.Root = "C:/Users/Woody/go/src/goBoss"
 	Environ.Sys = runtime.GOOS
+	Environ.QrcodeFile = "qrcode.png"
 
 	// 解析json
 	data, err := ioutil.ReadFile(fmt.Sprintf("%s/config/data.json", Environ.Root))

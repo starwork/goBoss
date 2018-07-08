@@ -12,6 +12,14 @@
       "method": "css selector",
       "value": "span.link-signin.cur"
     },
+    "二维码登录": {
+      "method": "css selector",
+      "value": "span.link-scan"
+    },
+    "验证码图片": {
+      "method": "css selector",
+      "value": ".qrcodeimg-box img"
+    },
     "验证码": {
       "method": "css selector",
       "value": ".sign-pwd .row-code img"

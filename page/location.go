@@ -30,13 +30,13 @@ type Method interface {
 
 var Page = map[string]map[string]Element{}
 
-func GetElement(root, name string) *Element {
-	ele, ok := Page[root][name]
-	if !ok {
-		log.Panicf("page/element.json未找到root: [%s] key: [%s]", root, name)
-	}
-	return &ele
-}
+//func GetElement(root, name string) *Element {
+//	ele, ok := Page[root][name]
+//	if !ok {
+//		log.Panicf("page/element.json未找到root: [%s] key: [%s]", root, name)
+//	}
+//	return &ele
+//}
 
 func (e *Element) GetEle(s *dr.Session) (dr.WebElement, error) {
 	ele, err := s.FindElement(e.Method, e.Value)
@@ -106,10 +106,10 @@ func (e *Element) WaitAndGet(now time.Time, s *dr.Session) (dr.WebElement, error
 
 }
 
-func TearDown(w *Login) {
+func TearDown(w *Engine) {
 	// 截图screen
 	defer w.Close()
-	pic, _ := w.Session.Screenshot()
+	pic, _ :=w.Screen()
 	filename := fmt.Sprintf("%s_error.png", time.Now().Format("2006_01_02_15_04_05"))
 	f, err := os.OpenFile(fmt.Sprintf("%s/picture/%s", config.Environ.Root, filename), os.O_WRONLY|os.O_TRUNC|os.O_CREATE, os.ModePerm)
 	if err != nil {

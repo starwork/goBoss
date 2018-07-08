@@ -14,19 +14,19 @@ func main() {
 	setLog()
 	driver.SetDriver()  // 自动获取浏览器驱动
 	chromeDriver := webdriver.NewChromeDriver(fmt.Sprintf("%s/driver/%s", cf.Environ.Root, cf.Environ.DriverName))
-	lg := &page.Login{Driver: chromeDriver}
-
-	lg.Start()
-	lg.OpenBrowser()
+	engine := &page.Engine{Dr: chromeDriver}
+	lg := &page.Login{Eg: engine}
+	lg.Eg.Start()
+	lg.Eg.OpenBrowser()
 	lg.Login()
 	reply := make(map[string]bool)
-	msgList := make([]map[string]string, 0)
+	msgList := make(map[string]map[string]string)
 	msg := &page.Message{
-		Driver: chromeDriver, Session: lg.Session,
+		Eg: engine,
 		ReplyList: reply, MsgList: msgList,
 	}
 	msg.Listen()
-	defer page.TearDown(lg)
+	defer page.TearDown(engine)
 }
 
 func setLog() {

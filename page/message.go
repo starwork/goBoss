@@ -5,16 +5,16 @@ import (
 	cf "goBoss/config"
 	"log"
 	"time"
-
+	dr "github.com/fedesog/webdriver"
 	"strings"
-
-	"github.com/fedesog/webdriver"
+	"strconv"
 )
 
+var first = true
+
 type Message struct {
-	Driver    *webdriver.ChromeDriver
-	Session   *webdriver.Session
-	MsgList   []map[string]string
+	Eg        Engineer
+	MsgList   map[string]map[string]string
 	ReplyList map[string]bool
 }
 
@@ -27,45 +27,15 @@ func (m *Message) Listen() {
 func (m *Message) Receive() {
 	for {
 		fmt.Printf("[%s]---正在获取消息列表\n", time.Now().Format("2006-01-02 15:04:05"))
-		msgList, latest := m.GetMsgList()
-		if len(msgList) > 0 {
-			if msgList[0]["bossName"] == m.MsgList[0]["bossName"] && latest == m.MsgList[0]["latest"] {
-				// 没有新boss消息
-				fmt.Printf("您没有新消息哦\n最新职位为: %+v\n消息为: %s\n", msgList[0], latest)
-				m.ReFetch()
-				continue
-			} else {
-				bossName, company := msgList[0]["bossName"], msgList[0]["company"]
-				star := m.IsStar(company)
-				if status, ok := m.ReplyList[bossName]; !ok {
-					// 发送消息
-					m.SendMsg(star, bossName, company)
-					m.ReFetch()
-					continue
-				} else {
-					if star == "star" {
-						// 回复包含简历且未发送过简历
-						if strings.Contains(latest, cf.Config.ResumeKeyword) && !status {
-							// 发送简历
-							m.SendInfo(bossName, company)
-							m.ReplyList[bossName] = true
-						}
-					}
-					// 非大厂不自动发送简历
-				}
-			}
-			fmt.Printf("您的最新职位为: %+v\n消息为: %s\n", msgList[0], latest)
-		} else {
-			m.ReFetch()
-			continue
-		}
-		fmt.Printf("[%s]---发送消息列表: %+v\n", time.Now().Format("2006-01-02 15:04:05"), m.ReplyList)
+		m.CheckMsgList()
+		fmt.Printf("[%s]---回复列表: %+v其中value为true时代表简历已投递!\n", time.Now().Format("2006-01-02 15:04:05"), m.ReplyList)
+		m.ReFetch()
 	}
 }
 
 func (m *Message) SendMsg(companyType, bossName, company string) {
 	var reply string
-	dialog := GetElement("消息页面", "消息对话框")
+	dialog := m.Eg.GetElement("消息页面", "消息对话框")
 	switch {
 	case companyType == "star":
 		reply = fmt.Sprintf(cf.Config.StarReply, bossName, company)
@@ -74,17 +44,15 @@ func (m *Message) SendMsg(companyType, bossName, company string) {
 	default:
 		reply = cf.Config.CommonReply
 	}
-	err := dialog.SendKeys(m.Session, reply)
-	//args := make([]interface{}, 0)
-	//_, err := m.Session.ExecuteScript(fmt.Sprintf(`document.querySelector("%s").innerHTML="%s";`, dialog.Value, reply), args)
+	err := dialog.SendKeys(m.Eg.Session(), reply)
 	time.Sleep(4 * time.Second)
 	Assert(err)
-	err = GetElement("消息页面", "发送按钮").Click(m.Session)
+	err = m.Eg.GetElement("消息页面", "发送按钮").Click(m.Eg.Session())
 	if err != nil {
-		fmt.Printf("自动回复失败!内容: %s, 接受者公司: %s, 接受者: %s\n Error: %s\n", reply, company, bossName, err.Error())
+		fmt.Printf("[%s]---自动回复失败!内容: %s, 接受者公司: %s, 接受者: %s\n Error: %s\n", time.Now().Format("2006-01-02 15:04:05"), reply, company, bossName, err.Error())
 	}
-	fmt.Printf("自动回复成功!内容: %s, 接受者公司: %s, 接受者: %s\n", reply, company, bossName)
-	m.ReplyList[bossName] = false
+	fmt.Printf("[%s]---自动回复成功!内容: %s, 接受者公司: %s, 接受者: %s\n", time.Now().Format("2006-01-02 15:04:05"), reply, company, bossName)
+	m.ReplyList[fmt.Sprintf("%s|%s", company, bossName)] = false
 }
 
 func (m *Message) IsStar(company string) string {
@@ -105,75 +73,104 @@ func (m *Message) IsStar(company string) string {
 }
 
 func (m *Message) SendInfo(bossName, company string) {
-	err := GetElement("消息页面", "发送简历").Click(m.Session)
+	err := m.Eg.GetElement("消息页面", "发送简历").Click(m.Eg.Session())
 	if err != nil {
-		fmt.Printf("遇到问题: 发送简历给公司: %s Boss: %s 出错!Error: %s\n", company, bossName, err.Error())
+		fmt.Printf("[%s]---遇到问题: 发送简历给公司: %s Boss: %s 出错!Error: %s\n", time.Now().Format("2006-01-02 15:04:05"), company, bossName, err.Error())
 	}
 	time.Sleep(2 * time.Second)
-	err = GetElement("消息页面", "发送简历确认").Click(m.Session)
+	err = m.Eg.GetElement("消息页面", "发送简历确认").Click(m.Eg.Session())
 	Assert(err)
-	fmt.Printf("发送简历给公司: %s Boss: %s 成功!", company, bossName)
+	fmt.Printf("[%s]---发送简历给公司: %s Boss: %s 成功!", time.Now().Format("2006-01-02 15:04:05"), company, bossName)
 }
 
 func (m *Message) ReFetch() {
 	//没有新消息或者没有消息
 	fmt.Printf("[%s]---正在重新获取消息\n", time.Now().Format("2006-01-02 15:04:05"))
-	m.Session.Refresh()
+	m.Eg.Session().Refresh()
 	time.Sleep(time.Duration(cf.Config.Delay) * time.Second) // 延迟Delay秒刷新
 }
 
 func (m *Message) EnterMessage() {
 	time.Sleep(5 * time.Second)
-	err := GetElement("首页", "消息").Click(m.Session)
+	err := m.Eg.GetElement("首页", "消息").Click(m.Eg.Session())
 	Assert(err)
 }
 
-func (m *Message) GetMsgList() ([]map[string]string, string) {
-	var lt string
+func (m *Message) CheckMsgList() {
 	time.Sleep(3 * time.Second)
 	// 获取消息列表
-	messageList, e := GetElement("消息页面", "消息列表").GetElements(m.Session)
+	messageList, e := m.Eg.GetElement("消息页面", "消息列表").GetElements(m.Eg.Session())
 	Assert(e)
+	fmt.Printf("\n[%s]---正在抓取最近5条消息\n", time.Now().Format("2006-01-02 15:04:05"))
 	if len(messageList) == 0 {
 		// 消息列表为空， 持续检查
 		log.Printf("消息列表为空, 请检查!")
-		return []map[string]string{}, ""
 	}
-	msgList := make([]map[string]string, 0)
 	for i, ms := range messageList[:5] {
 		ms.Click()
 		// 输出前10条最新消息
 		time.Sleep(2 * time.Second)
 		info := m.getInfo()
-
-		eles, _ := GetElement("消息页面", "聊天内容").GetElements(m.Session)
-		var latest string
-		if len(eles) > 0 {
-			latest, _ = eles[len(eles)-1].Text()
+		fmt.Printf("[%s]---第%d条消息内容为: %+v\n", time.Now().Format("2006-01-02 15:04:05"), i+1, info)
+		key := info["company"] + "|" + info["bossName"]
+		if !first {
+			// 说明不是第一次运行, 不发消息
+			company, bossName := info["company"], info["bossName"]
+			if info_bf, ok := m.MsgList[key]; ok {
+				if info["latest"] != info_bf["latest"] {
+					m.judge(company, bossName, key, info)
+				}
+			} else {
+				m.judge(company, bossName, key, info)
+			}
 		}
-		if i == 0 {
-			lt = latest
-		}
-		info["latest"] = latest
-		msgList = append(msgList, info)
+		m.MsgList[key] = info
 		time.Sleep(1 * time.Second)
 	}
-	// for _, msg := range msgList {
-	// 	fmt.Printf("%+v\n", msg)
-	// }
-	if len(m.MsgList) == 0 {
-		m.MsgList = msgList
-		return msgList, lt
+	first = false
+
+}
+
+func (m *Message) judge(company, bossName, key string, info map[string]string) {
+	star := m.IsStar(company)
+	salary := strings.Split(info["money"], "-")
+	var low, high string
+	if len(salary) > 1 {
+		low, high = strings.Replace(salary[0], "K", "", -1), strings.Replace(salary[1], "K", "", -1)
 	}
-	// 回到第一个对话
-	messageList[0].Click()
-	time.Sleep(2 * time.Second)
-	return msgList, lt
+	lowSalary, err := strconv.ParseInt(low, 10, 64)
+	if err != nil {
+		log.Println("获取最低薪水失败!Error: ", err.Error())
+	}
+	highSalary, err := strconv.ParseInt(high, 10, 64)
+	if err != nil {
+		log.Println("获取最低薪水失败!Error: ", err.Error())
+	}
+	// 如果预期薪水小于最大-1且大于最低+1, 则继续。如公司薪水为8-15k, 预期为12K, 满足要求。
+	if (lowSalary+1) < cf.Config.ExpectSalary && cf.Config.ExpectSalary < (highSalary-1) {
+		if status, ok := m.ReplyList[key]; !ok {
+			// 发送消息
+			m.SendMsg(star, bossName, company)
+		} else {
+			if star == "star" {
+				// 回复包含简历且未发送过简历
+				if strings.Contains(info["latest"], cf.Config.ResumeKeyword) && !status {
+					// 发送简历
+					m.SendInfo(bossName, company)
+					m.ReplyList[key] = true
+				}
+			}
+			// 非大厂不自动发送简历
+		}
+	} else {
+		fmt.Printf("[%s]---该公司给的待遇不在考虑范围之内!\n", time.Now().Format("2006-01-02 15:04:05"))
+	}
+
 }
 
 func (m *Message) getInfo() map[string]string {
 	info := make(map[string]string)
-	bossEle, err := GetElement("消息页面", "Boss信息").GetElements(m.Session)
+	bossEle, err := m.Eg.GetElement("消息页面", "Boss信息").GetElements(m.Eg.Session())
 	Assert(err)
 	if len(bossEle) > 0 {
 		info["bossName"], _ = bossEle[0].Text()
@@ -184,7 +181,7 @@ func (m *Message) getInfo() map[string]string {
 			info["bossTitle"], _ = bossEle[2].Text()
 		}
 	}
-	jobEle, err := GetElement("消息页面", "职位信息").GetElements(m.Session)
+	jobEle, err := m.Eg.GetElement("消息页面", "职位信息").GetElements(m.Eg.Session())
 	Assert(err)
 	if len(jobEle) > 0 {
 		info["position"], _ = jobEle[1].Text()
@@ -194,5 +191,22 @@ func (m *Message) getInfo() map[string]string {
 	for k, v := range info {
 		info[k] = strings.Replace(v, " ", "", -1)
 	}
+	eles, _ := m.Eg.GetElement("消息页面", "聊天内容").GetElements(m.Eg.Session())
+	var latest string
+	if len(eles) > 0 {
+		latest, _ = eles[len(eles)-1].Text()
+		if latest == "" {
+			// 可能是表情
+			emoji, err := eles[len(eles)-1].FindElements(dr.FindElementStrategy("css selector"), "i")
+			if err != nil {
+				log.Printf("获取emoji表情失败!")
+			}
+			for _, em := range emoji {
+				title, _ := em.GetAttribute("title")
+				latest += title
+			}
+		}
+	}
+	info["latest"] = latest
 	return info
 }

@@ -114,15 +114,14 @@ func (w *Login) GeneratePic() {
 }
 
 func (w *Login) OpenQrCode() {
-	var shell []string
+	var cmd *exec.Cmd
+	filePath := fmt.Sprintf("%s/picture/%s", cf.Environ.Root, cf.Environ.QrcodeFile)
 	switch cf.Environ.Sys {
 	case "windows":
-		shell = []string{"cmd", "/C"}
+		cmd = exec.Command("cmd", "/C", "start", filePath)
 	default:
-		shell = []string{"sh", "-c"}
+		cmd = exec.Command("sh", "-c", fmt.Sprintf("open %s", filePath))
 	}
-	filePath := fmt.Sprintf("%s/picture/%s", cf.Environ.Root, cf.Environ.QrcodeFile)
-	cmd := exec.Command(shell[0], shell[1], "start", filePath)
 	cmdOutput := &bytes.Buffer{}
 	cmd.Stdout = cmdOutput
 	err := cmd.Run()

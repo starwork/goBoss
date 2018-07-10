@@ -5,7 +5,7 @@
   
   切记: 本软件仅限于个人使用, 如有任何商业用途, 记得分我一杯羹。
   
-# 闪光点
+# 功能点
 
   - 自动回复boss消息
   
@@ -54,19 +54,19 @@
   
 ### 修改json配置文件(config/data.json)
 
-百度API文字识别(每日500次免费)，进入[官网](http://ai.baidu.com/tech/ocr/general)申请并配置, 配置文件目前是可用的, 供测试使用。
+~~百度API文字识别(每日500次免费)，进入[官网](http://ai.baidu.com/tech/ocr/general)申请并配置, 配置文件目前是可用的, 供测试使用。
 
-- app_id
+- ~~app_id
 
-- api_key
+- ~~api_key
 
-- secret_key
+- ~~secret_key
 
-用户密码配置
+~~用户密码配置
 
-- user(boss直聘手机号)
+- ~~user(boss直聘手机号)
 
-- password(boss直聘登录密码)
+- ~~password(boss直聘登录密码)
 
 其他配置
 
@@ -113,12 +113,12 @@
 # todolist
   还有很多不完善, 没做好的。之后填坑, 首当其冲就是解决用户需要手动安装浏览器驱动的问题。
   
-- 发简历后邮件通知
+- 发简历后邮件通知, 包括工作jd和上班地点的最近路线(含驾车和最短公交及时间计算, 利用高德api)
   
-- 低薪过滤
+- 低薪过滤---done, 见data.json中expect_salary字段, 默认为10
 - 工作地点筛选
-- chromedriver自动下载(done)
-- 对方连续发送表情时会接收不到新消息的bug(因为表情不是文本, 在web页面属于icon)
+- chromedriver自动下载---done
+- 对方连续发送表情时会接收不到新消息的bug(因为表情不是文本, 在web页面属于icon)---done
 - 去除time.Sleep这种丑陋的等待元素方式
 
 

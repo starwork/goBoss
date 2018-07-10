@@ -54,19 +54,19 @@
   
 ### 修改json配置文件(config/data.json)
 
-~~百度API文字识别(每日500次免费)，进入[官网](http://ai.baidu.com/tech/ocr/general)申请并配置, 配置文件目前是可用的, 供测试使用。
+~~百度API文字识别(每日500次免费)，进入[官网](http://ai.baidu.com/tech/ocr/general)申请并配置, 配置文件目前是可用的, 供测试使用。~~
 
-- ~~app_id
+- ~~app_id~~
 
-- ~~api_key
+- ~~api_key~~
 
-- ~~secret_key
+- ~~secret_key~~
 
-~~用户密码配置
+~~用户密码配置~~
 
-- ~~user(boss直聘手机号)
+- ~~user(boss直聘手机号)~~
 
-- ~~password(boss直聘登录密码)
+- ~~password(boss直聘登录密码)~~
 
 其他配置
 

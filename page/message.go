@@ -53,6 +53,7 @@ func (m *Message) SendMsg(companyType, bossName, company string) {
 	}
 	fmt.Printf("[%s]---自动回复成功!内容: %s, 接受者公司: %s, 接受者: %s\n", time.Now().Format("2006-01-02 15:04:05"), reply, company, bossName)
 	m.ReplyList[fmt.Sprintf("%s|%s", company, bossName)] = false
+	m.Eg.ScreenShot(company + "_" + bossName)
 }
 
 func (m *Message) IsStar(company string) string {
@@ -117,7 +118,7 @@ func (m *Message) CheckMsgList() {
 			// 说明不是第一次运行, 不发消息
 			company, bossName := info["company"], info["bossName"]
 			if info_bf, ok := m.MsgList[key]; ok {
-				if info["latest"] != info_bf["latest"] {
+				if info["latest"] != info_bf["latest"] && info_bf["latest"] != "" && info["latest"] != "" {
 					m.judge(company, bossName, key, info)
 				}
 			} else {

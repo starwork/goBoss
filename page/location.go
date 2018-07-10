@@ -109,7 +109,7 @@ func (e *Element) WaitAndGet(now time.Time, s *dr.Session) (dr.WebElement, error
 func TearDown(w *Engine) {
 	// 截图screen
 	defer w.Close()
-	pic, _ :=w.Screen()
+	pic, _ := w.Screen()
 	filename := fmt.Sprintf("%s_error.png", time.Now().Format("2006_01_02_15_04_05"))
 	f, err := os.OpenFile(fmt.Sprintf("%s/picture/%s", config.Environ.Root, filename), os.O_WRONLY|os.O_TRUNC|os.O_CREATE, os.ModePerm)
 	if err != nil {

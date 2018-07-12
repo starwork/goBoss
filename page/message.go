@@ -58,7 +58,7 @@ func (m *Message) SendMsg(companyType, bossName, company string) {
 	d := utils.Mail{
 		Subject: "自动回复Boss消息成功!",
 		Attach:  filename,
-		Content: fmt.Sprintf(`<h4>内容: %s, 接受者公司: %s, 接受者: %s</h4>`, reply, company, bossName),
+		Content: fmt.Sprintf(`<h4>接受者公司: %s, 接受者: %s</h4> 详细请看附件截图!`, company, bossName),
 	}
 	d.Send() // 发送邮件
 
@@ -90,6 +90,13 @@ func (m *Message) SendInfo(bossName, company string) {
 	err = m.Eg.GetElement("消息页面", "发送简历确认").Click(m.Eg.Session())
 	Assert(err)
 	fmt.Printf("[%s]---发送简历给公司: %s Boss: %s 成功!", time.Now().Format("2006-01-02 15:04:05"), company, bossName)
+	filename := m.Eg.ScreenShot(company + "_" + bossName + "简历")
+	d := utils.Mail{
+		Subject: "成功发送简历给Boss!",
+		Attach:  filename,
+		Content: fmt.Sprintf(`<h4>接受者公司: %s, 接受者: %s</h4> 详细请看附件截图!`, company, bossName),
+	}
+	d.Send() // 发送邮件
 }
 
 func (m *Message) ReFetch() {

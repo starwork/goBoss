@@ -122,7 +122,7 @@ func (w *Engine) GetUrl() (string, error) {
 	return w.Ss.GetUrl()
 }
 
-func (w *Engine) git ScreenShot(key string) string {
+func (w *Engine) ScreenShot(key string) string {
 	pic, _ := w.Screen()
 	filename := fmt.Sprintf("%s_%s.png", key, time.Now().Format("2006_01_02_15_04_05"))
 	filename = fmt.Sprintf("%s/picture/%s", cf.Environ.Root, filename)

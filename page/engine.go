@@ -26,7 +26,7 @@ type Engineer interface {
 	Session() *webdriver.Session
 	Screen() ([]byte, error)
 	GetUrl() (string, error)
-	ScreenShot(key string)
+	ScreenShot(key string) string
 }
 
 func (w *Engine) Session() *webdriver.Session {
@@ -122,13 +122,15 @@ func (w *Engine) GetUrl() (string, error) {
 	return w.Ss.GetUrl()
 }
 
-func (w *Engine) ScreenShot(key string) {
+func (w *Engine) git ScreenShot(key string) string {
 	pic, _ := w.Screen()
 	filename := fmt.Sprintf("%s_%s.png", key, time.Now().Format("2006_01_02_15_04_05"))
-	f, err := os.OpenFile(fmt.Sprintf("%s/picture/%s", cf.Environ.Root, filename), os.O_WRONLY|os.O_TRUNC|os.O_CREATE, os.ModePerm)
+	filename = fmt.Sprintf("%s/picture/%s", cf.Environ.Root, filename)
+	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, os.ModePerm)
 	if err != nil {
 		log.Printf("发送消息后截图失败!Error: %s", err.Error())
 	}
 	f.Write(pic)
 	defer f.Close()
+	return filename
 }

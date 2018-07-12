@@ -8,6 +8,7 @@ import (
 	dr "github.com/fedesog/webdriver"
 	"strings"
 	"strconv"
+	"goBoss/utils"
 )
 
 var first = true
@@ -53,7 +54,14 @@ func (m *Message) SendMsg(companyType, bossName, company string) {
 	}
 	fmt.Printf("[%s]---自动回复成功!内容: %s, 接受者公司: %s, 接受者: %s\n", time.Now().Format("2006-01-02 15:04:05"), reply, company, bossName)
 	m.ReplyList[fmt.Sprintf("%s|%s", company, bossName)] = false
-	m.Eg.ScreenShot(company + "_" + bossName)
+	filename := m.Eg.ScreenShot(company + "_" + bossName)
+	d := utils.Mail{
+		Subject: "自动回复Boss消息成功!",
+		Attach:  filename,
+		Content: fmt.Sprintf(`<h4>内容: %s, 接受者公司: %s, 接受者: %s</h4>`, reply, company, bossName),
+	}
+	d.Send() // 发送邮件
+
 }
 
 func (m *Message) IsStar(company string) string {
@@ -119,10 +127,10 @@ func (m *Message) CheckMsgList() {
 			company, bossName := info["company"], info["bossName"]
 			if info_bf, ok := m.MsgList[key]; ok {
 				if info["latest"] != info_bf["latest"] && info_bf["latest"] != "" && info["latest"] != "" {
-					m.judge(company, bossName, key, info)
+					m.dealMsg(company, bossName, key, info)
 				}
 			} else {
-				m.judge(company, bossName, key, info)
+				m.dealMsg(company, bossName, key, info)
 			}
 		}
 		m.MsgList[key] = info
@@ -132,7 +140,7 @@ func (m *Message) CheckMsgList() {
 
 }
 
-func (m *Message) judge(company, bossName, key string, info map[string]string) {
+func (m *Message) dealMsg(company, bossName, key string, info map[string]string) {
 	star := m.IsStar(company)
 	salary := strings.Split(info["money"], "-")
 	var low, high string
@@ -145,7 +153,7 @@ func (m *Message) judge(company, bossName, key string, info map[string]string) {
 	}
 	highSalary, err := strconv.ParseInt(high, 10, 64)
 	if err != nil {
-		log.Println("获取最低薪水失败!Error: ", err.Error())
+		log.Println("获取最高薪水失败!Error: ", err.Error())
 	}
 	// 如果预期薪水小于最大-1且大于最低+1, 则继续。如公司薪水为8-15k, 预期为12K, 满足要求。
 	if (lowSalary+1) < cf.Config.ExpectSalary && cf.Config.ExpectSalary < (highSalary-1) {
@@ -164,7 +172,7 @@ func (m *Message) judge(company, bossName, key string, info map[string]string) {
 			// 非大厂不自动发送简历
 		}
 	} else {
-		fmt.Printf("[%s]---该公司给的待遇不在考虑范围之内!\n", time.Now().Format("2006-01-02 15:04:05"))
+		log.Printf("[%s]---该公司给的待遇不在考虑范围之内!\n", time.Now().Format("2006-01-02 15:04:05"))
 	}
 
 }

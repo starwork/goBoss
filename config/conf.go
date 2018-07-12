@@ -54,6 +54,7 @@ type UserConfig struct {
 	BlackReply    string   `json:"black_reply"`
 	CommonReply   string   `json:"common_reply"`
 	ExpectSalary  int64    `json:"expect_salary"`
+	MailServer    string   `json:"mail_server"`
 }
 
 type Env struct {
@@ -76,7 +77,7 @@ func GetCurrentDirectory() string {
 
 func init() {
 	Environ.Root = GetCurrentDirectory()
-	// Environ.Root = "/Users/wuranxu/go/src/goBoss"
+	Environ.Root = "/Users/wuranxu/go/src/goBoss"
 	// Environ.Root, _ = filepath.Abs(filepath.Dir(os.Args[0]))
 	//Environ.Root = "C:/Users/Woody/go/src/goBoss"
 	Environ.Sys = runtime.GOOS

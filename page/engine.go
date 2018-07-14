@@ -9,6 +9,7 @@ import (
 	cf "goBoss/config"
 	"time"
 	"os"
+	"encoding/base64"
 )
 
 type Engine struct {
@@ -27,6 +28,7 @@ type Engineer interface {
 	Screen() ([]byte, error)
 	GetUrl() (string, error)
 	ScreenShot(key string) string
+	ScreenAsBs64() string
 }
 
 func (w *Engine) Session() *webdriver.Session {
@@ -133,4 +135,13 @@ func (w *Engine) ScreenShot(key string) string {
 	f.Write(pic)
 	defer f.Close()
 	return filename
+}
+
+func (w *Engine) ScreenAsBs64() string {
+	bt, err := w.Screen()
+	if err != nil {
+		log.Println("截图出错!Error: ", err.Error())
+	}
+	bs64 := utils.Encode(base64.StdEncoding, bt)
+	return bs64
 }

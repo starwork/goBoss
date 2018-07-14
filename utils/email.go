@@ -4,6 +4,7 @@ import (
 	"gopkg.in/gomail.v2"
 	cf "goBoss/config"
 	"log"
+	"encoding/base64"
 )
 
 type Mail struct {
@@ -21,8 +22,14 @@ func (m *Mail) Send() {
 	if m.Attach != "" {
 		handle.Attach(m.Attach)
 	}
-	s := gomail.NewDialer(cf.Config.MailServer, 25, cf.Config.Sender, cf.Config.SenderPwd)
+	s := gomail.NewDialer(cf.Config.MailServer, cf.Config.MailPort, cf.Config.Sender, cf.Config.SenderPwd)
 	if err := s.DialAndSend(handle); err != nil {
 		log.Println("发送邮件失败!Error: ", err.Error())
 	}
+}
+
+func Encode(enc *base64.Encoding, bt []byte) string {
+	// 编码
+	encStr := enc.EncodeToString(bt)
+	return encStr
 }

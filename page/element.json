@@ -59,7 +59,11 @@
     "聊天内容": {
       "method": "css selector",
       "value": ".chat-message .item-friend  .text span"
-    }, 
+    },
+    "自己的消息": {
+      "method": "css selector",
+      "value": ".chat-message .item-myself"
+    },
     "发送简历": {
       "method": "css selector",
       "value": ".btn-resume"

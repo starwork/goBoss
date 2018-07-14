@@ -1,10 +1,11 @@
 {
   "user": "xxx",
   "password": "xxx",
-  "receiver": "55497569@qq.com",
-  "sender": "wuranxu520@126.com",
-  "sender_pwd": "自己的126邮箱密码",
-  "mail_server": "smtp.126.com",
+  "receiver": "619434176@qq.com",
+  "sender": "woody@goboss.club",
+  "sender_pwd": "nicai",
+  "mail_server": "smtp.exmail.qq.com",
+  "mail_port": 465,
   "black_list": [
     "直聘小秘书", "直聘助手", "柯莱特", "纬创", "博彦", "东软", "中软", "文思海辉", "软通"
   ],
@@ -34,5 +35,5 @@
   "star_reply": "%s您好, 十分荣幸能受到大厂: %s的亲睐, 如果您需要我的简历(未更新), 请先查看我的个人情况后在回复内容中带上\"我已看完个人介绍\"字样。这是我编写的自动回复工具, 项目地址: https://github.com/wuranxu/goBoss",
   "black_reply": "您好, 暂时没有兴趣, 抱歉~",
   "common_reply": "您好, 我最近工作变动太多, 想再沉淀沉淀, 如有打扰请见谅。这是我编写的自动回复工具, 项目地址: https://github.com/wuranxu/goBoss",
-  "expect_salary": 10
+  "expect_salary": 23
 }

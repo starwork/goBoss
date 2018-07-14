@@ -28,6 +28,7 @@ type UserConfig struct {
 	Receiver      string   `json:"receiver"`
 	Sender        string   `json:"sender"`
 	SenderPwd     string   `json:"sender_pwd"`
+	MailPort      int   `json:"mail_port"`
 	AppID         string   `json:"app_id"`
 	APIKey        string   `json:"api_key"`
 	SecretKey     string   `json:"secret_key"`
@@ -77,7 +78,7 @@ func GetCurrentDirectory() string {
 
 func init() {
 	Environ.Root = GetCurrentDirectory()
-	Environ.Root = "/Users/wuranxu/go/src/goBoss"
+	//Environ.Root = "/Users/wuranxu/go/src/goBoss"
 	// Environ.Root, _ = filepath.Abs(filepath.Dir(os.Args[0]))
 	//Environ.Root = "C:/Users/Woody/go/src/goBoss"
 	Environ.Sys = runtime.GOOS

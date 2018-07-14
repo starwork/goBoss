@@ -54,11 +54,18 @@ func (m *Message) SendMsg(companyType, bossName, company string) {
 	}
 	fmt.Printf("[%s]---自动回复成功!内容: %s, 接受者公司: %s, 接受者: %s\n", time.Now().Format("2006-01-02 15:04:05"), reply, company, bossName)
 	m.ReplyList[fmt.Sprintf("%s|%s", company, bossName)] = false
-	filename := m.Eg.ScreenShot(company + "_" + bossName)
+	bs := m.Eg.ScreenAsBs64()
 	d := utils.Mail{
-		Subject: "自动回复Boss消息成功!",
-		Attach:  filename,
-		Content: fmt.Sprintf(`<h4>接受者公司: %s, 接受者: %s</h4> 详细请看附件截图!`, company, bossName),
+		Subject: "回复boss消息成功!",
+		Content: fmt.Sprintf(`
+		<html>
+			<body>
+				<h4>公司: %s</h4>
+				<h4>名字: %s</h4>
+				<img src="data:image/png;base64, %s"/>
+			</body>
+		</html>	
+		`, company, bossName, bs),
 	}
 	d.Send() // 发送邮件
 
@@ -162,11 +169,32 @@ func (m *Message) dealMsg(company, bossName, key string, info map[string]string)
 	if err != nil {
 		log.Println("获取最高薪水失败!Error: ", err.Error())
 	}
+	// 没发送过消息才回复
+	msg, _ := m.Eg.GetElement("消息页面", "自己的消息").GetElements(m.Eg.Session())
 	// 如果预期薪水小于最大-1且大于最低+1, 则继续。如公司薪水为8-15k, 预期为12K, 满足要求。
 	if (lowSalary+1) < cf.Config.ExpectSalary && cf.Config.ExpectSalary < (highSalary-1) {
 		if status, ok := m.ReplyList[key]; !ok {
 			// 发送消息
-			m.SendMsg(star, bossName, company)
+			if len(msg) == 0 {
+				m.SendMsg(star, bossName, company)
+			} else {
+				// 你们之前沟通过
+				bs := m.Eg.ScreenAsBs64()
+				d := utils.Mail{
+					Subject: "有Boss来新消息了!(沟通过职位)",
+					Content: fmt.Sprintf(`
+					<html>
+						<body>
+							<h4>公司: %s</h4>
+							<h4>名字: %s</h4>
+							<img src="data:image/png;base64, %s"/>
+						</body>
+					</html>
+					`, company, bossName, bs),
+				}
+				d.Send() // 发送邮件
+			}
+
 		} else {
 			if star == "star" {
 				// 回复包含简历且未发送过简历

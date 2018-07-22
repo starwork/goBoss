@@ -79,8 +79,19 @@
     "发送按钮": {
       "method": "css selector",
       "value": ".btn.btn-send"
+    },
+    "职位链接": {
+      "method": "css selector",
+      "value": ".chat-position-bar a"
+    },
+    "岗位要求": {
+      "method": "css selector",
+      "value": ".job-detail .detail-content div[class='job-sec'] .text"
+    },
+    "职位地址": {
+      "method": "css selector",
+      "value": ".location-address"
     }
-    
   }
 
 }

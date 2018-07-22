@@ -34,6 +34,37 @@ func (m *Message) Receive() {
 	}
 }
 
+func (m *Message) SendJobMail(company, bossName, title string) {
+	job_link, err := m.Eg.GetElement("消息页面", "职位链接").Attr(m.Eg.Session(), "href")
+	Assert(err)
+	job := utils.Spider{Url: job_link}
+	desc, err := job.Html(m.Eg.GetElement("消息页面", "岗位要求").Value)
+	if err != nil {
+		log.Println("获取职位描述失败!Error: ", err)
+	}
+	addr := job.Text(m.Eg.GetElement("消息页面", "职位地址").Value)
+	if desc == "" || addr == "" {
+		desc = "职位可能已下架, 未获取到jd"
+		addr = "职位可能已下架, 未获取到工作地点"
+	}
+	bs := m.Eg.ScreenAsBs64()
+	d := utils.Mail{
+		Subject: title,
+		Content: fmt.Sprintf(`
+		<html>
+			<body>
+				<h4>公司: %s</h4>
+				<h4>名字: %s</h4>
+				<h4>地址: %s</h4>
+				<h4>%s</h4>
+				<img src="data:image/png;base64, %s"/>
+			</body>
+		</html>	
+		`, company, bossName, addr, desc, bs),
+	}
+	d.Send() // 发送邮件
+}
+
 func (m *Message) SendMsg(companyType, bossName, company string) {
 	var reply string
 	dialog := m.Eg.GetElement("消息页面", "消息对话框")
@@ -54,20 +85,7 @@ func (m *Message) SendMsg(companyType, bossName, company string) {
 	}
 	fmt.Printf("[%s]---自动回复成功!内容: %s, 接受者公司: %s, 接受者: %s\n", time.Now().Format("2006-01-02 15:04:05"), reply, company, bossName)
 	m.ReplyList[fmt.Sprintf("%s|%s", company, bossName)] = false
-	bs := m.Eg.ScreenAsBs64()
-	d := utils.Mail{
-		Subject: "回复boss消息成功!",
-		Content: fmt.Sprintf(`
-		<html>
-			<body>
-				<h4>公司: %s</h4>
-				<h4>名字: %s</h4>
-				<img src="data:image/png;base64, %s"/>
-			</body>
-		</html>	
-		`, company, bossName, bs),
-	}
-	d.Send() // 发送邮件
+	m.SendJobMail(company, bossName, "回复boss消息成功!")
 
 }
 
@@ -97,13 +115,7 @@ func (m *Message) SendInfo(bossName, company string) {
 	err = m.Eg.GetElement("消息页面", "发送简历确认").Click(m.Eg.Session())
 	Assert(err)
 	fmt.Printf("[%s]---发送简历给公司: %s Boss: %s 成功!", time.Now().Format("2006-01-02 15:04:05"), company, bossName)
-	filename := m.Eg.ScreenShot(company + "_" + bossName + "简历")
-	d := utils.Mail{
-		Subject: "成功发送简历给Boss!",
-		Attach:  filename,
-		Content: fmt.Sprintf(`<h4>接受者公司: %s, 接受者: %s</h4> 详细请看附件截图!`, company, bossName),
-	}
-	d.Send() // 发送邮件
+	m.SendJobMail(company, bossName, "成功发送简历给Boss!")
 }
 
 func (m *Message) ReFetch() {
@@ -179,20 +191,7 @@ func (m *Message) dealMsg(company, bossName, key string, info map[string]string)
 				m.SendMsg(star, bossName, company)
 			} else {
 				// 你们之前沟通过
-				bs := m.Eg.ScreenAsBs64()
-				d := utils.Mail{
-					Subject: "有Boss来新消息了!(沟通过职位)",
-					Content: fmt.Sprintf(`
-					<html>
-						<body>
-							<h4>公司: %s</h4>
-							<h4>名字: %s</h4>
-							<img src="data:image/png;base64, %s"/>
-						</body>
-					</html>
-					`, company, bossName, bs),
-				}
-				d.Send() // 发送邮件
+				m.SendJobMail(company, bossName, "有Boss来新消息了!(沟通过职位)")
 			}
 
 		} else {

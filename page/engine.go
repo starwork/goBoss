@@ -49,16 +49,14 @@ func (w *Engine) GetElement(root, name string) *Element {
 
 func (w *Engine) MaxWindow() error {
 	p := fmt.Sprintf(`{"windowHandle": "current", "sessionId": "%s"}`, w.Ss.Id)
-	req := utils.Request{
-		Data:   p,
-		Method: "POST",
-		Url:    fmt.Sprintf("http://127.0.0.1:%d/session/%s/window/current/maximize", w.Dr.Port, w.Ss.Id),
+	req := utils.RequestData{
+		JSON: p,
 	}
-
-	res := req.Http()
-	if !res["status"].(bool) {
+	url := fmt.Sprintf("http://127.0.0.1:%d/session/%s/window/current/maximize", w.Dr.Port, w.Ss.Id)
+	res, err := utils.HttpPost(url, req)
+	if err != nil {
 		log.Printf("response: %+v", res)
-		return errors.New(fmt.Sprintf(`最大化窗口失败, 请检查!%+v`, res["msg"]))
+		return err
 	}
 	return nil
 }
@@ -96,16 +94,10 @@ func (w *Engine) OpenBrowser() {
 
 func (w *Engine) SetWindow(width, height int) error {
 	p := fmt.Sprintf(`{"windowHandle": "current", "sessionId": "%s", "height": %d, "width": %d}`, w.Ss.Id, height, width)
-	req := utils.Request{
-		Data:   p,
-		Method: "POST",
-		Url:    fmt.Sprintf("http://127.0.0.1:%d/session/%s/window/current/size", w.Dr.Port, w.Ss.Id),
-	}
-
-	res := req.Http()
-	if !res["status"].(bool) {
-		log.Printf("response: %+v", res)
-		return errors.New(fmt.Sprintf(`设置浏览器窗口失败, 请检查!%+v`, res["msg"]))
+	url := fmt.Sprintf("http://127.0.0.1:%d/session/%s/window/current/size", w.Dr.Port, w.Ss.Id)
+	res, err := utils.HttpPost(url, utils.RequestData{JSON: p})
+	if err != nil {
+		return errors.New(fmt.Sprintf(`设置浏览器窗口失败, 请检查!%+v`, res.Error))
 	}
 	return nil
 }

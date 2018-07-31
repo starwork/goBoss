@@ -66,17 +66,14 @@ func execDriver() {
 func downloadDriver(s string) {
 	log.Println("正在下载chromedriver驱动, 版本: ", s)
 	zipfileName := fmt.Sprintf("%s/driver/%s", config.Environ.Root, config.Environ.DriverZip)
-	req := utils.Request{
-		Url:    fmt.Sprintf("%s%s/%s", config.Config.DriverUrl, s, config.Environ.DriverZip),
-		Method: "GET",
-	}
-	res := req.Http()
-	if result := res["result"].([]byte); !res["status"].(bool) {
-		log.Panicf("下载浏览器驱动版本失败, 请检查Url是否更换: %s!%s", req.Url, string(result))
+	url := fmt.Sprintf("%s%s/%s", config.Config.DriverUrl, s, config.Environ.DriverZip)
+	res, err := utils.HttpGet(url)
+	if err != nil {
+		log.Panicf("下载浏览器驱动版本失败, 请检查Url是否更换: %s!%v", url, res.Error)
 	} else {
 		// 下载浏览器驱动zip
 		f, _ := os.OpenFile(zipfileName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
-		f.Write(result)
+		f.Write(res.Bytes())
 		f.Close()
 	}
 	// 解压文件
@@ -119,20 +116,18 @@ func checkDriver() (bool, error) {
 
 func getDriverVer(number string) string {
 	var file_vr string
-	req := utils.Request{
-		Url:    fmt.Sprintf("%sLATEST_RELEASE", config.Config.DriverUrl),
-		Method: "GET",
+	url := fmt.Sprintf("%sLATEST_RELEASE", config.Config.DriverUrl)
+	res, err := utils.HttpGet(url)
+	if err != nil {
+		log.Panicf("获取浏览器驱动版本失败, 请检查Url是否更换: %s!%v", url, res.Error)
 	}
-	res := req.Http()
-	var latest string
-	if result := string(res["result"].([]byte)); !res["status"].(bool) {
-		log.Panicf("获取浏览器驱动版本失败, 请检查Url是否更换: %s!%s", req.Url, result)
-	} else {
-		latest = result
+	latest := res.String()
+	url = fmt.Sprintf("%s%s/notes.txt", config.Config.DriverUrl, latest)
+	res, err = utils.HttpGet(url)
+	if err != nil {
+		log.Panicf("解析浏览器驱动版本信息失败, 请检查Url是否更换: %s!%v", url, res.Error)
 	}
-	req.Url = fmt.Sprintf("%s%s/notes.txt", config.Config.DriverUrl, latest)
-	res = req.Http()
-	info := res["result"].([]byte)
+	info := res.Bytes()
 	reg, _ := regexp.Compile(`-+ChromeDriver\s+v(\d+\.+\d+)[\s|.|-|]+`)
 	regSp, _ := regexp.Compile(`Supports\s+Chrome\s+v(\d+-\d+)`)
 	dr := reg.FindAll(info, -1)

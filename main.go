@@ -12,21 +12,18 @@ import (
 
 func main() {
 	setLog()
-	driver.SetDriver()  // 自动获取浏览器驱动
+	driver.SetDriver() // 自动获取浏览器驱动
 	chromeDriver := webdriver.NewChromeDriver(fmt.Sprintf("%s/driver/%s", cf.Environ.Root, cf.Environ.DriverName))
-	engine := &page.Engine{Dr: chromeDriver}
-	lg := &page.Login{Eg: engine}
-	lg.Eg.Start()
-	lg.Eg.OpenBrowser()
+	browser := page.NewSession(chromeDriver)
+	browser.OpenBrowser()
+	lg := page.NewLoginPage(browser)
 	lg.Login()
+	//lg.SendCode()
 	reply := make(map[string]bool)
 	msgList := make(map[string]map[string]string)
-	msg := &page.Message{
-		Eg: engine,
-		ReplyList: reply, MsgList: msgList,
-	}
+	msg := page.NewMessagePage(msgList, reply, browser)
 	msg.Listen()
-	defer page.TearDown(engine)
+	defer page.TearDown(browser)
 }
 
 func setLog() {

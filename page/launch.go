@@ -9,10 +9,15 @@ import (
 	"os/exec"
 	"bytes"
 	"strings"
+	"goBoss/utils"
 )
 
-type Login struct {
-	Eg Engineer
+type login struct {
+	*session
+}
+
+func NewLoginPage(ss *session) *login {
+	return &login{ss}
 }
 
 func Assert(err error) {
@@ -22,52 +27,51 @@ func Assert(err error) {
 	}
 }
 
-//func (w *Login) sendCode() {
-//	// 识别验证码
-//	for {
-//		// image, err := w.Session.FindElement(lg["验证码"].Method, lg["验证码"].Value)
-//		image := w.Eg.GetElement("登录页面", "验证码")
-//		src, err := image.Attr(w.Eg.Session(), "src")
-//		Assert(err)
-//		// src, _ := image.GetAttribute("src")
-//		code := verify.GetCode(src)
-//		if len(code) != 4 {
-//			// 验证码识别有误
-//			time.Sleep(3 * time.Second / 2)
-//			fmt.Println("验证码长度不为4, 重新获取!")
-//			image.Click(w.Eg.Session())
-//			continue
-//		} else {
-//			err = w.Eg.GetElement("登录页面", "验证码输入框").SendKeys(w.Eg.Session(), code)
-//			Assert(err)
-//
-//			err = w.Eg.GetElement("登录页面", "登录").Click(w.Eg.Session())
-//			Assert(err)
-//			time.Sleep(3 * time.Second / 2)
-//			text, _ := w.Eg.GetElement("登录页面", "验证码错误").Text(w.Eg.Session())
-//			// Assert(err)
-//			if text == "" {
-//				// 登录成功, break
-//				fmt.Println("恭喜您登录成功...")
-//				break
-//			} else {
-//				fmt.Println("验证码错误, 重新登录...")
-//				time.Sleep(3 * time.Second / 2)
-//				w.Eg.GetElement("登录页面", "验证码").Click(w.Eg.Session())
-//				continue
-//			}
-//		}
-//
-//	}
-//}
+func (w *login) SendCode() {
+	// 识别验证码
+	for {
+		// image, err := w.Session.FindElement(lg["验证码"].Method, lg["验证码"].Value)
+		image := w.GetElement("登录页面", "验证码")
+		src, err := image.Attr(w.Session, "src")
+		Assert(err)
+		// src, _ := image.GetAttribute("src")
+		code := utils.GetCode(src)
+		if len(code) != 4 {
+			// 验证码识别有误
+			time.Sleep(3 * time.Second / 2)
+			fmt.Println("验证码长度不为4, 重新获取!")
+			image.Click(w.Session)
+			continue
+		} else {
+			err = w.GetElement("登录页面", "验证码输入框").SendKeys(w.Session, code)
+			Assert(err)
 
-func (w *Login) Login() {
+			err = w.GetElement("登录页面", "登录").Click(w.Session)
+			Assert(err)
+			time.Sleep(3 * time.Second / 2)
+			text, _ := w.GetElement("登录页面", "验证码错误").Text(w.Session)
+			// Assert(err)
+			if text == "" {
+				// 登录成功, break
+				fmt.Println("恭喜您登录成功...")
+				break
+			} else {
+				fmt.Println("验证码错误, 重新登录...")
+				time.Sleep(3 * time.Second / 2)
+				w.GetElement("登录页面", "验证码").Click(w.Session)
+				continue
+			}
+		}
 
+	}
+}
+
+func (w *login) Login() {
 	w.GeneratePic()
 	w.OpenQrCode()
 	fmt.Printf("[%s]---请在8秒内扫码登录\n", time.Now().Format("2006-01-02 15:04:05"))
 	time.Sleep(10 * time.Second)
-	url, _ := w.Eg.GetUrl()
+	url, _ := w.GetUrl()
 	if strings.Contains(url, "login") {
 		// 还未登陆成功
 		fmt.Printf("[%s]---8秒内未成功登录, 请在8秒内扫码登录\n", time.Now().Format("2006-01-02 15:04:05"))
@@ -83,10 +87,10 @@ func (w *Login) Login() {
 	//w.sendCode()
 }
 
-func (w *Login) GeneratePic() {
-	w.Eg.Session().Refresh()  // 刷新页面
+func (w *login) GeneratePic() {
+	w.Refresh() // 刷新页面
 	// 进入密码登录页面
-	err := w.Eg.GetElement("登录页面", "二维码登录").Click(w.Eg.Session())
+	err := w.GetElement("登录页面", "二维码登录").Click(w.Session)
 	Assert(err)
 	time.Sleep(1 * time.Second)
 	//pic_url, err := w.Eg.GetElement("登录页面", "验证码图片").Attr(w.Eg.Session(), "src")
@@ -104,7 +108,7 @@ func (w *Login) GeneratePic() {
 	//	log.Fatal("获取Boss直聘验证码失败!")
 	//}
 	//bs := result["result"].([]byte)   // 转换为[]byte
-	bs, err := w.Eg.Screen()
+	bs, err := w.Screen()
 	if err != nil {
 		log.Fatal("获取二维码图片失败!")
 	}
@@ -113,7 +117,7 @@ func (w *Login) GeneratePic() {
 	defer f.Close()
 }
 
-func (w *Login) OpenQrCode() {
+func (w *login) OpenQrCode() {
 	var cmd *exec.Cmd
 	filePath := fmt.Sprintf("%s/picture/%s", cf.Environ.Root, cf.Environ.QrcodeFile)
 	switch cf.Environ.Sys {

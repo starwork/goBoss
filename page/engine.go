@@ -12,58 +12,27 @@ import (
 	"encoding/base64"
 )
 
-type Engine struct {
-	Dr *webdriver.ChromeDriver
-	Ss *webdriver.Session
+const defaultUrl = "127.0.0.1"
+
+type session struct {
+	d *webdriver.ChromeDriver
+	*webdriver.Session
 }
 
-type Engineer interface {
-	MaxWindow() error
-	Start()
-	OpenBrowser()
-	SetWindow(width, height int) error
-	GetElement(root, name string) *Element
-	Driver() *webdriver.ChromeDriver
-	Session() *webdriver.Session
-	Screen() ([]byte, error)
-	GetUrl() (string, error)
-	ScreenShot(key string) string
-	ScreenAsBs64() string
-}
-
-func (w *Engine) Session() *webdriver.Session {
-	return w.Ss
-}
-
-func (w *Engine) Driver() *webdriver.ChromeDriver {
-	return w.Dr
-}
-
-func (w *Engine) GetElement(root, name string) *Element {
-	ele, ok := Page[root][name]
-	if !ok {
-		log.Panicf("page/element.json未找到root: [%s] key: [%s]", root, name)
+func NewSession(d *webdriver.ChromeDriver) *session {
+	s := start(d)
+	if s == nil {
+		return nil
 	}
-	return &ele
+	return &session{d, s}
 }
 
-func (w *Engine) MaxWindow() error {
-	p := fmt.Sprintf(`{"windowHandle": "current", "sessionId": "%s"}`, w.Ss.Id)
-	req := utils.RequestData{
-		JSON: p,
-	}
-	url := fmt.Sprintf("http://127.0.0.1:%d/session/%s/window/current/maximize", w.Dr.Port, w.Ss.Id)
-	res, err := utils.HttpPost(url, req)
+func start(d *webdriver.ChromeDriver) *webdriver.Session {
+	err := d.Start()
 	if err != nil {
-		log.Printf("response: %+v", res)
-		return err
+		log.Printf("启动浏览器驱动失败: %s", err.Error())
+		return nil
 	}
-	return nil
-}
-
-func (w *Engine) Start() {
-	var err error
-	w.Dr.Start()
 	args := make([]string, 0)
 	if cf.Config.Headless {
 		args = append(args, "--headless")
@@ -76,25 +45,67 @@ func (w *Engine) Start() {
 		"platform":           "ANY",
 	}
 	required := webdriver.Capabilities{}
-	w.Ss, err = w.Dr.NewSession(desired, required)
+	se, err := d.NewSession(desired, required)
 	if err != nil {
 		log.Printf("open browser failed: %s", err.Error())
+		return nil
 	}
-
+	return se
 }
 
-func (w *Engine) OpenBrowser() {
-	w.Ss.Url(cf.Config.LoginURL)
+type Driver interface {
+	MaxWindow() error
+	OpenBrowser() error
+	SetWindow(width, height int) error
+	GetElement(root, name string) *Element
+	Screen() ([]byte, error)
+	ScreenShot(key string) string
+	ScreenAsBs64() string
+}
+
+func (w *session) GetElement(root, name string) *Element {
+	r, ok := Page[root]
+	if !ok || r == nil {
+		log.Panicf("page/element.json未找到页面: [%s]", root)
+	}
+	ele, ok := Page[root][name]
+	if !ok {
+		log.Panicf("page/element.json未找到root: [%s] key: [%s]", root, name)
+	}
+	return &ele
+}
+
+func (w *session) MaxWindow() error {
+	p := fmt.Sprintf(`{"windowHandle": "current", "sessionId": "%s"}`, w.Id)
+	req := utils.RequestData{
+		JSON: p,
+	}
+	url := fmt.Sprintf("http://%s:%d/session/%s/window/current/maximize", defaultUrl, w.d.Port, w.Id)
+	_, err := utils.HttpPost(url, req)
+	if err != nil {
+		log.Printf("最大化窗口失败, error: %v", err)
+		return err
+	}
+	return nil
+}
+
+func (w *session) OpenBrowser() error {
+	w.Url(cf.Config.LoginURL)
 	err := w.SetWindow(1600, 900)
 	if err != nil {
-		log.Panicf("最大化浏览器失败!!!Msg: %s", err.Error())
+		log.Panicf("最大化浏览器失败!!!error: %s", err.Error())
 	}
-	w.Ss.SetTimeoutsImplicitWait(cf.Config.WebTimeout)
+	err = w.SetTimeoutsImplicitWait(cf.Config.WebTimeout)
+	if err != nil {
+		log.Printf("设置脚本超时时间失败, error: %v\n", err)
+		return err
+	}
+	return nil
 }
 
-func (w *Engine) SetWindow(width, height int) error {
-	p := fmt.Sprintf(`{"windowHandle": "current", "sessionId": "%s", "height": %d, "width": %d}`, w.Ss.Id, height, width)
-	url := fmt.Sprintf("http://127.0.0.1:%d/session/%s/window/current/size", w.Dr.Port, w.Ss.Id)
+func (w *session) SetWindow(width, height int) error {
+	p := fmt.Sprintf(`{"windowHandle": "current", "sessionId": "%s", "height": %d, "width": %d}`, w.Id, height, width)
+	url := fmt.Sprintf("http://127.0.0.1:%d/session/%s/window/current/size", w.d.Port, w.Id)
 	res, err := utils.HttpPost(url, utils.RequestData{JSON: p})
 	if err != nil {
 		return errors.New(fmt.Sprintf(`设置浏览器窗口失败, 请检查!%+v`, res.Error))
@@ -102,21 +113,19 @@ func (w *Engine) SetWindow(width, height int) error {
 	return nil
 }
 
-func (w *Engine) Close() {
-	w.Ss.CloseCurrentWindow()
-	w.Dr.Stop()
-
+func (w *session) Close() error {
+	err := w.CloseCurrentWindow()
+	if err != nil {
+		return err
+	}
+	return w.d.Stop()
 }
 
-func (w *Engine) Screen() ([]byte, error) {
-	return w.Ss.Screenshot()
+func (w *session) Screen() ([]byte, error) {
+	return w.Screenshot()
 }
 
-func (w *Engine) GetUrl() (string, error) {
-	return w.Ss.GetUrl()
-}
-
-func (w *Engine) ScreenShot(key string) string {
+func (w *session) ScreenShot(key string) string {
 	pic, _ := w.Screen()
 	filename := fmt.Sprintf("%s_%s.png", key, time.Now().Format("2006_01_02_15_04_05"))
 	filename = fmt.Sprintf("%s/picture/%s", cf.Environ.Root, filename)
@@ -129,7 +138,7 @@ func (w *Engine) ScreenShot(key string) string {
 	return filename
 }
 
-func (w *Engine) ScreenAsBs64() string {
+func (w *session) ScreenAsBs64() string {
 	bt, err := w.Screen()
 	if err != nil {
 		log.Println("截图出错!Error: ", err.Error())

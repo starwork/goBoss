@@ -106,7 +106,7 @@ func (e *Element) WaitAndGet(now time.Time, s *dr.Session) (dr.WebElement, error
 
 }
 
-func TearDown(w *Engine) {
+func TearDown(w *session) {
 	// 截图screen
 	defer w.Close()
 	pic, _ := w.Screen()

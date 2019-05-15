@@ -3,7 +3,7 @@ package driver
 import (
 	"fmt"
 	"goBoss/config"
-
+	"github.com/PuerkitoBio/goquery"
 	"archive/zip"
 	"bytes"
 	"goBoss/utils"
@@ -114,6 +114,32 @@ func checkDriver() (bool, error) {
 	return false, err
 }
 
+func getDriverVerV2(ver string) string {
+	errMsg := "可能淘宝镜像挂了，请重试"
+	result := ""
+	res, err := utils.HttpGet(config.Config.DriverUrl)
+	if err != nil {
+		log.Panicln(errMsg, err)
+	}
+	doc, err := goquery.NewDocumentFromReader(res)
+	if err != nil {
+		log.Panicln(errMsg, err)
+	}
+	// Find the review items
+
+	doc.Find("pre a").Each(func(i int, s *goquery.Selection) {
+		// For each item found, get the band and title
+		band := s.Text()
+		if strings.HasPrefix(band, ver) {
+			result = strings.TrimRight(band, "/")
+		}
+	})
+	if result == "" {
+		panic("没有找到合适的驱动, 请升级浏览器")
+	}
+	return result
+}
+
 func getDriverVer(number string) string {
 	var file_vr string
 	url := fmt.Sprintf("%sLATEST_RELEASE", config.Config.DriverUrl)
@@ -132,6 +158,9 @@ func getDriverVer(number string) string {
 	regSp, _ := regexp.Compile(`Supports\s+Chrome\s+v(\d+-\d+)`)
 	dr := reg.FindAll(info, -1)
 	sp := regSp.FindAll(info, -1)
+	if len(sp) == 0 {
+		return getDriverVerV2(number)
+	}
 	for i, s := range sp {
 		vers := strings.Split(string(s), "-")
 		small, bigger := vers[0], vers[1]

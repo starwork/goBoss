@@ -4,6 +4,13 @@
   无需配置Go环境, 我会提供windows和macos的可执行程序。
   
   切记: 本软件仅限于个人使用, 如有任何商业用途, 记得分我一杯羹。
+
+# boss网站更新防爬虫检测
+
+  应对方式，将config/data.json的headers改为false，不能使用无头模式。
+
+  ```"headless": false```
+
   
 # 功能点
 

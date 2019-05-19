@@ -39,7 +39,7 @@ func start(d *webdriver.ChromeDriver) *webdriver.Session {
 	}
 	desired := webdriver.Capabilities{
 		"Platform":           "Mac",
-		"goog:chromeOptions": map[string][]string{"args": args, "extensions": []string{}},
+		"goog:chromeOptions": map[string][]string{"args": args, "extensions": {}, "excludeSwitches": {"enable-automation"}},
 		"browserName":        "chrome",
 		"version":            "",
 		"platform":           "ANY",

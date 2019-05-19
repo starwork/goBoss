@@ -144,6 +144,8 @@ func (m *message) CheckMsgList() {
 	if len(messageList) == 0 {
 		// 消息列表为空， 持续检查
 		log.Printf("消息列表为空, 请检查!")
+		m.ScreenShot("null_msg")
+		return
 	}
 	for i, ms := range messageList[:5] {
 		ms.Click()

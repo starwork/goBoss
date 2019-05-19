@@ -1,15 +1,14 @@
 package page
 
 import (
+	"bytes"
 	"fmt"
 	cf "goBoss/config"
 	"log"
-	"time"
 	"os"
 	"os/exec"
-	"bytes"
 	"strings"
-	"goBoss/utils"
+	"time"
 )
 
 type login struct {
@@ -27,44 +26,44 @@ func Assert(err error) {
 	}
 }
 
-func (w *login) SendCode() {
-	// 识别验证码
-	for {
-		// image, err := w.Session.FindElement(lg["验证码"].Method, lg["验证码"].Value)
-		image := w.GetElement("登录页面", "验证码")
-		src, err := image.Attr(w.Session, "src")
-		Assert(err)
-		// src, _ := image.GetAttribute("src")
-		code := utils.GetCode(src)
-		if len(code) != 4 {
-			// 验证码识别有误
-			time.Sleep(3 * time.Second / 2)
-			fmt.Println("验证码长度不为4, 重新获取!")
-			image.Click(w.Session)
-			continue
-		} else {
-			err = w.GetElement("登录页面", "验证码输入框").SendKeys(w.Session, code)
-			Assert(err)
-
-			err = w.GetElement("登录页面", "登录").Click(w.Session)
-			Assert(err)
-			time.Sleep(3 * time.Second / 2)
-			text, _ := w.GetElement("登录页面", "验证码错误").Text(w.Session)
-			// Assert(err)
-			if text == "" {
-				// 登录成功, break
-				fmt.Println("恭喜您登录成功...")
-				break
-			} else {
-				fmt.Println("验证码错误, 重新登录...")
-				time.Sleep(3 * time.Second / 2)
-				w.GetElement("登录页面", "验证码").Click(w.Session)
-				continue
-			}
-		}
-
-	}
-}
+//func (w *login) SendCode() {
+//	// 识别验证码
+//	for {
+//		// image, err := w.Session.FindElement(lg["验证码"].Method, lg["验证码"].Value)
+//		image := w.GetElement("登录页面", "验证码")
+//		src, err := image.Attr(w.Session, "src")
+//		Assert(err)
+//		// src, _ := image.GetAttribute("src")
+//		code := utils.GetCode(src)
+//		if len(code) != 4 {
+//			// 验证码识别有误
+//			time.Sleep(3 * time.Second / 2)
+//			fmt.Println("验证码长度不为4, 重新获取!")
+//			image.Click(w.Session)
+//			continue
+//		} else {
+//			err = w.GetElement("登录页面", "验证码输入框").SendKeys(w.Session, code)
+//			Assert(err)
+//
+//			err = w.GetElement("登录页面", "登录").Click(w.Session)
+//			Assert(err)
+//			time.Sleep(3 * time.Second / 2)
+//			text, _ := w.GetElement("登录页面", "验证码错误").Text(w.Session)
+//			// Assert(err)
+//			if text == "" {
+//				// 登录成功, break
+//				fmt.Println("恭喜您登录成功...")
+//				break
+//			} else {
+//				fmt.Println("验证码错误, 重新登录...")
+//				time.Sleep(3 * time.Second / 2)
+//				w.GetElement("登录页面", "验证码").Click(w.Session)
+//				continue
+//			}
+//		}
+//
+//	}
+//}
 
 func (w *login) Login() {
 	w.GeneratePic()

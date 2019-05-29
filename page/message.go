@@ -2,13 +2,13 @@ package page
 
 import (
 	"fmt"
-	cf "goBoss/config"
-	"log"
-	"time"
 	dr "github.com/fedesog/webdriver"
-	"strings"
-	"strconv"
+	cf "goBoss/config"
 	"goBoss/utils"
+	"log"
+	"strconv"
+	"strings"
+	"time"
 )
 
 var first = true
@@ -174,6 +174,10 @@ func (m *message) CheckMsgList() {
 
 func (m *message) dealMsg(company, bossName, key string, info map[string]string) {
 	star := m.IsStar(company)
+	if strings.HasSuffix(info["money"], "薪") {
+		// 过滤N薪
+		info["money"] = strings.Split(info["money"], "·")[0]
+	}
 	salary := strings.Split(info["money"], "-")
 	var low, high string
 	if len(salary) > 1 {
